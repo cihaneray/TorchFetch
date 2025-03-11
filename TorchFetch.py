@@ -112,9 +112,7 @@ MM88MMM ,adPPYba,  8b,dPPYba,  ,adPPYba, 88,dPPYba,
 
     @staticmethod
     def get_ram() -> str:
-        per_ram = f'%{100 - psutil.virtual_memory().percent} used '
-        total_ram = f'of {round(psutil.virtual_memory().total / (1024 ** 2))}MB '
-        return per_ram + total_ram
+        return f'{round(psutil.virtual_memory().total / (1024 ** 2))}MB '
 
     @staticmethod
     def get_gpu() -> str:
