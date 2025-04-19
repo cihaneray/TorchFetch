@@ -1,4 +1,8 @@
 # 🔥 TorchFetch
+[![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](https://opensource.org/licenses/MIT)
+[![Python: 3.*](https://img.shields.io/badge/Python-3.*-blueviolet.svg)](https://www.python.org/downloads/)
+[![Maintenance: Active](https://img.shields.io/badge/Maintenance-Active-success.svg)](https://github.com/yourusername/GCOTT)
+[![OS](https://img.shields.io/badge/OS-Linux%20%7C%20Windows%20%7C%20macOS-orange.svg)]()
 
 ```                                                   
                                          88         
