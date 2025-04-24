@@ -1,10 +1,13 @@
 import re
 import os
 import socket
+from argparse import Namespace
+
 import distro
 import psutil
 import platform
 import subprocess
+import argparse
 
 from rich.text import Text
 from rich.table import Table
@@ -18,15 +21,23 @@ from screeninfo import get_monitors
 
 @dataclass
 class XToSeconds:
+    """Constants for time conversion to seconds"""
     DAY_TO_SECONDS = 86400
     HOUR_TO_SECONDS = 3600
     MINUTE_TO_SECONDS = 60
 
 
 class TorchFetch:
+    """Fetch and display system information in a formatted output"""
+
     def __init__(self) -> None:
+        """Initialize TorchFetch with system information"""
+        self.parser = self.arg_parser()
+        self.theme = self.parser.theme if self.parser.theme else "default"
+
         self.console = Console()
 
+        # Fetch system information
         self.os_info = self.get_os()
         self.host = self.get_host()
         self.kernel = self.get_kernel()
@@ -39,9 +50,8 @@ class TorchFetch:
         self.gpu = self.get_gpu()
         self.memory = self.get_ram()
 
-        self.label_color = 'bold cyan'
-        self.value_color = 'white'
-        self.bold_purple = 'bold purple'
+        # Set theme colors
+        self.label_color, self.value_color, self.logo_color, self.border_style = self.set_theme(self.theme)
 
         self.logo = """                                                      
                                          88           
@@ -56,7 +66,58 @@ MM88MMM ,adPPYba,  8b,dPPYba,  ,adPPYba, 88,dPPYba,
                                                       """
 
     @staticmethod
+    def arg_parser() -> Namespace:
+        parser = argparse.ArgumentParser(description="TorchFetch - A system information fetching tool")
+        parser.add_argument("--theme", choices=["default", "dark", "light", "monochrome"],
+                            default="default", help="Color theme to use")
+
+        return parser.parse_args()
+
+    @staticmethod
+    def set_theme(theme_name: str) -> tuple[str, str, str, str]:
+        """Set color theme for output
+        
+        Args:
+            theme_name: Name of theme to use
+        """
+        themes = {
+            "default": {
+                "label_color": "bold cyan",
+                "value_color": "white",
+                "logo_color": "bold purple",
+                "border_style": "bold purple"
+            },
+            "dark": {
+                "label_color": "bold blue",
+                "value_color": "bright_white",
+                "logo_color": "bold green",
+                "border_style": "bold green"
+            },
+            "light": {
+                "label_color": "bold magenta",
+                "value_color": "bright_black",
+                "logo_color": "bold red",
+                "border_style": "bold red"
+            },
+            "monochrome": {
+                "label_color": "bold",
+                "value_color": "white",
+                "logo_color": "bold",
+                "border_style": "bold"
+            }
+        }
+
+        theme = themes.get(theme_name, themes["default"])
+
+        return theme["label_color"], theme["value_color"], theme["logo_color"], theme["border_style"]
+
+    @staticmethod
     def get_uptime() -> str:
+        """Get system uptime
+
+        Returns:
+            Formatted uptime string
+        """
         boot_time = psutil.boot_time()
         now = datetime.now().timestamp()
 
@@ -65,8 +126,8 @@ MM88MMM ,adPPYba,  8b,dPPYba,  ,adPPYba, 88,dPPYba,
         hours, remainder = divmod(remainder, XToSeconds.HOUR_TO_SECONDS)
         minutes, seconds = divmod(remainder, XToSeconds.MINUTE_TO_SECONDS)
 
-        uptime_str = f" {days}d {hours}h {minutes}m {seconds}s"
-        return uptime_str
+        uptime_str = f"{days}d {hours}h {minutes}m {seconds}s"
+        return uptime_str if uptime_str else "N/A"
 
     @staticmethod
     def get_shell() -> str:
@@ -80,12 +141,9 @@ MM88MMM ,adPPYba,  8b,dPPYba,  ,adPPYba, 88,dPPYba,
 
     @staticmethod
     def get_resolution() -> str:
-        try:
-            monitors = get_monitors()
-            resolutions = [f'{m.width}x{m.height}' for m in monitors]
-            return ','.join(resolutions)
-        except Exception:
-            return 'N/A'
+        monitors = get_monitors()
+        resolutions = [f'{m.width}x{m.height}' for m in monitors]
+        return ','.join(resolutions) if resolutions else "N/A"
 
     @staticmethod
     def get_packages() -> str:
@@ -116,14 +174,11 @@ MM88MMM ,adPPYba,  8b,dPPYba,  ,adPPYba, 88,dPPYba,
 
     @staticmethod
     def get_gpu() -> str:
-        try:
-            result = subprocess.run(['lspci'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            gpu_lines = re.findall(r'(VGA compatible controller|3D controller): (.+)', result.stdout, re.IGNORECASE)
-            gpu_names = [gpu[1] for gpu in gpu_lines]
+        result = subprocess.run(['lspci'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        gpu_lines = re.findall(r'(VGA compatible controller|3D controller): (.+)', result.stdout, re.IGNORECASE)
+        gpu_names = [gpu[1] for gpu in gpu_lines]
 
-            return ','.join(gpu_names) if gpu_names else 'N/A'
-        except Exception:
-            return 'N/A'
+        return ','.join(gpu_names) if gpu_names else 'N/A'
 
     @staticmethod
     def get_host() -> str:
@@ -154,8 +209,8 @@ MM88MMM ,adPPYba,  8b,dPPYba,  ,adPPYba, 88,dPPYba,
     def print_console(self) -> None:
         table = self.create_table()
 
-        logo_text = Text(self.logo, style=self.bold_purple)
-        logo_panel = Panel.fit(logo_text, border_style=self.bold_purple, padding=(0, 2))
+        logo_text = Text(self.logo, style=self.logo_color)
+        logo_panel = Panel.fit(logo_text, border_style=self.border_style, padding=(0, 2))
 
         layout = Table.grid(expand=True)
         layout.add_column(justify='left', ratio=3)
