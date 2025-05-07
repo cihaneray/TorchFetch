@@ -109,7 +109,6 @@ Contributions are welcome! Feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Acknowledgements
 
 - The [Rich](https://github.com/Textualize/rich) library for beautiful terminal formatting
